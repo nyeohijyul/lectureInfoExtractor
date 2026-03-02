@@ -8,17 +8,26 @@
         #교과목명 {
             font-size: x-large;
         }
-        /* 일부러 console log를 복붙해서 쓸 수 있도록 inline style로 넣음 */
+        @media (min-width: 900px;) { .flex-item { width: 30% !important; } }
+        @media (max-width: 900px;) { .flex-item { width: 100% !important; } }
+        .flex-item { border: 2px solid #000; border-radius: 10px; padding: 10px; box-sizing: border-box; margin-bottom: 10px; }
+        .flex-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        /* console log를 복붙해서 쓸 수 있도록 inline style로 한 번 더 넣어놨음 */
     </style>
 </head>
 <body>
     <br>
     <textarea id="originalString" placeholder="수업계획서 > 프린트 > pdf 저장 화면에서 Ctrl + A 로 긁어온 내용 복사" cols="100"></textarea>
     <br>
-    <p style="color:red;">평가방법은 따로 확인하세요.</p><button id="resultBttn">결과</button>
+    <p style="color:red;">평가방법(성적비율)은 별도로 확인해 주세요.</p><button id="resultBttn">결과</button>
     <hr>
     <div
         id="result"
+        class="flex-container"
         style="display: flex;
             flex-wrap: wrap;
             justify-content: space-around;"></div>
@@ -117,6 +126,7 @@
             stringList.forEach(str => {
                 if (str) {
                     const newDiv = document.createElement('div');
+                    newDiv.setAttribute('class','flex-item');
                     newDiv.setAttribute('style','width: 30%; border: 2px solid #000; border-radius: 10px; padding: 10px; box-sizing: border-box; margin-bottom: 10px');
                     for (const keySet of keywordList) {
                         if (typeof keySet[1] != "object") {
