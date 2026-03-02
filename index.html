@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #교과목명 {
+            font-size: x-large;
+        }
+        /* 일부러 console log를 복붙해서 쓸 수 있도록 inline style로 넣음 */
+    </style>
+</head>
+<body>
+    <br>
+    <textarea id="originalString" placeholder="수업계획서 > 프린트 > pdf 저장 화면에서 Ctrl + A 로 긁어온 내용 복사" cols="100"></textarea>
+    <br>
+    <p style="color:red;">평가방법은 따로 확인하세요.</p><button id="resultBttn">결과</button>
+    <hr>
+    <div
+        id="result"
+        style="display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;"></div>
+    <script>
+        const resultBttn = document.getElementById('resultBttn');
+        resultBttn.addEventListener('click', start);
+
+        const resultArea = document.getElementById("result");
+
+        function findStringFunc( startKeyword = '', endKeyword = '' ) {
+            return ( targetString = '' ) => {
+                if ( targetString.includes(startKeyword) && targetString.includes(endKeyword) ) {
+                    let resultString = '';
+                    targetString.slice(targetString.indexOf(startKeyword)+startKeyword.length, targetString.indexOf(endKeyword)).split('').forEach(char => {
+                        if (char == '\n') {
+                            resultString += '<br>'
+                        } else {
+                            resultString += char
+                        }
+                    });
+                    return {
+                        keys: [startKeyword, endKeyword],
+                        indexs: [targetString.indexOf(startKeyword), targetString.indexOf(endKeyword)],
+                        resultString: resultString
+                    };
+                } else {
+                    return 'error';
+                }
+            };
+        }
+
+        function findLeastIndexKeyword(str, [key1, key2]) {
+            if (str.includes(key1) && str.includes(key2)) {
+                return (str.indexOf(key1) < str.indexOf(key2)) ? key1 : key2
+            }
+        }
+
+        function pushElements(target, str, [key1, key2], summary, changeTitle){
+            let slicer = findStringFunc(key1, key2);
+            let sliceResult = slicer(str);
+            if (summary) {
+                const newSummary = document.createElement("summary");
+                const newDetails = document.createElement("details");
+                newSummary.innerText = changeTitle? changeTitle : sliceResult["keys"][0];
+                
+                newDetails.innerHTML = sliceResult["resultString"];newDetails.appendChild(newSummary);
+                newDetails.appendChild(document.createElement("hr"));
+                target.appendChild(newDetails);
+            } else {
+                const newP = document.createElement("p");
+                newP.innerHTML = `${changeTitle? changeTitle : sliceResult["keys"][0]} : ${sliceResult["resultString"]}`;
+                newP.setAttribute("id",sliceResult["keys"][0])
+                target.appendChild(newP);
+            }
+        }
+
+        /**
+         * 1. textarea 내용 가져오고
+         * 2. title 기준으로 split 진행하기 -> index 1부터
+         * 3. 2에서 받아온 배열로 for문 돌리기
+         * 4. keywordList의 length만큼 for문 돌리기
+        */
+        function start() {
+            while (resultArea.hasChildNodes()) {
+                resultArea.removeChild(resultArea.firstChild);
+            }
+            const originalString = document.getElementById('originalString').value;
+            let title = '수 업 계 획 서'
+            /** 
+             * [0]: startKeyword
+             * [1]: endKeyword
+             * [2]: summary & details 조합인가?
+             * [3]: (optional)
+             * string 일 때: title 변경대상 (기본: [0]값으로 설정됨)
+             * object 일 때: 더 가까운 index 찾기
+             */
+            let keywordList = [
+                // [3]가 false일 때
+                ['교과목명','교과목코드-분반', false],
+                ['학점/시간', '이수학년', false],
+                ['수업시간', '강의실', false],
+                ['강의실', '원어강의', false],
+                ['평가유형','선수과목', false],
+                ['담당교수','생성형', true],
+                ['생성형 AI 활용 정책','키워드', true],
+                ['키워드','첨부파일', false],
+                ['교과목 개요','2. 수업목표', true],
+                ['수업목표', '3. 국민핵심역량', true],
+                // [3]가 true이고 object 아님 -> title 변경값
+                ['제출기한설명','7. 교재', true ,'수행과제'],
+                ['ISBN','8. 수업규정', true ,'교재'],
+                // [3]가 true이고 object -> 2개 중 더 빠른 인덱스를 endKeyword로 넣기
+                ['에듀테크 등)',['[공학인증교과목]','대상 및'], true, '주차별 수업계획']
+            ]
+            let stringList = originalString.split(title)
+            stringList.forEach(str => {
+                if (str) {
+                    const newDiv = document.createElement('div');
+                    newDiv.setAttribute('style','width: 30%; border: 2px solid #000; border-radius: 10px; padding: 10px; box-sizing: border-box; margin-bottom: 10px');
+                    for (const keySet of keywordList) {
+                        if (typeof keySet[1] != "object") {
+                            pushElements(newDiv, str, [keySet[0], keySet[1]], keySet[2], keySet[3]? keySet[3] : false);
+                        } else {
+                            let key2 = findLeastIndexKeyword(str,[...keySet[1]])
+                            pushElements(newDiv, str, [keySet[0], key2], keySet[2], keySet[3]? keySet[3] : false);
+                        }
+                    }
+                    resultArea.append(newDiv)
+                }
+            });
+            console.log(resultArea);
+        }
+    </script>
+</body>
+</html>
